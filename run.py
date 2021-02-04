@@ -1,12 +1,11 @@
 import discord
 
-from src import bot
+from src import main as Client
 
 VERSION = "0.0.1"
 
-
 def main():
-    bot.bot.run(VERSION)
+    Client.bot.run(VERSION)
 
 
 if __name__ == "__main__":

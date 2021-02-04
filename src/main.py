@@ -14,13 +14,18 @@ try:
     from discord.ext.commands import Bot as BotBase
     from discord.ext import commands, tasks
 
-    class Bot(BotBase):
+except Exception as e:
+    print("[-] missing module discord")
+    print("[-] use -> pip install -r requirements.txt")
+    print(f"[-] {e}")
+    
+class Bot(BotBase):
         def __init__(self):
             self.ready = False
             self.VERSION = None
             self.command_prefix = str(os.getenv("DEFAULT_PREFIX"))
             self.description = "NTI Discord Bot Challenge 2021"
-            super().__init__(command_prefix=self.command_prefix,
+            super().__init__(command_prefix=self.command_prefix, help_command=discord.ext.commands.DefaultHelpCommand(),
                              description=self.description)
 
         def run(self, version=None):
@@ -55,9 +60,4 @@ try:
             else:
                 print("[!] Bot reconnecting")
 
-    bot = Bot()
-
-except Exception as e:
-    print("[-] missing module discord")
-    print("[-] use -> pip install -r requirements.txt")
-    print(f"[-] {e}")
+bot = Bot()
