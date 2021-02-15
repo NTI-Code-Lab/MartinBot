@@ -2,6 +2,7 @@ import json
 import requests
 from discord import Embed, Colour
 from discord.ext import commands
+from re import search
 
 
 class SchoolSoft(commands.Cog):
@@ -13,7 +14,7 @@ class SchoolSoft(commands.Cog):
     async def lunch(self, ctx):
         """Get the lunch from SchoolSoft"""
         lunch = requests.get(
-            "https://apischoolsoft.herokuapp.com/v1/lunch").json()
+            "https://apischoolsoft.herokuapp.com/v2/lunch").json()
 
         days = ["Måndag", "Tisdag", "Onsdag", "Torsdag", "Fredag"]
         embeds = Embed(title="Veckans Lunchmeny",
@@ -52,12 +53,12 @@ class SchoolSoft(commands.Cog):
 
         embed = Embed(
             url="https://sms.schoolsoft.se/nti/jsp/student/right_student_schedule.jsp?menu=schedule", colour=Colour(0x46c3db))
-        embed.set_author(name="SchoolSoft", url="https://sms.schoolsoft.se/nti/jsp/student/right_student_lunchmenu.jsp?menu=lunchmenu",
+        embed.set_author(name="SchoolSoft", url="https://sms.schoolsoft.se/nti/jsp/student/right_student_schedule.jsp?menu=schedule",
                          icon_url="https://sms.schoolsoft.se/android-chrome-192x192.png")
 
         if inputDay is None:
             ToDaysSchedule = requests.get(
-                f"https://apischoolsoft.herokuapp.com/v1/schedule/{className}?today=true").json()
+                f"https://apischoolsoft.herokuapp.com/v2/schedule/{className}?today=true").json()
 
             embed.title = f"Dagens schema"
             for index in ToDaysSchedule:
@@ -81,7 +82,7 @@ class SchoolSoft(commands.Cog):
             day = NormalDays[dayIndex]
 
             Schedule = requests.get(
-                f"https://apischoolsoft.herokuapp.com/v1/schedule/{className}?day={day}").json()
+                f"https://apischoolsoft.herokuapp.com/v2/schedule/{className}?day={day}").json()
 
             embed.title = f"{inputDay.capitalize()} schema"
             for index in Schedule:
@@ -92,6 +93,38 @@ class SchoolSoft(commands.Cog):
                 else:
                     embed.add_field(
                         name=index["subject"], value=f"Klassen börjar kl {index['time']} i rum {index['location']}", inline=False)
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name="contacts")
+    async def contacts(self, ctx, name: str):
+        """Get the contacts of a staff by name"""
+
+        embed = Embed(
+            url="https://sms.schoolsoft.se/nti/jsp/student/right_student_staff.jsp?menu=contactlist", colour=Colour(0x46c3db))
+        embed.set_author(name="SchoolSoft", url="https://sms.schoolsoft.se/nti/jsp/student/right_student_staff.jsp?menu=contactlist",
+                         icon_url="https://sms.schoolsoft.se/android-chrome-192x192.png")
+
+        if name is not None:
+            request = requests.get(
+                "https://apischoolsoft.herokuapp.com/v2/contactlist").json()
+
+            try:
+                for NameOfStaff in request:
+                    if search(name, NameOfStaff):
+                        print(request[NameOfStaff])
+                        embed.add_field(
+                            name=request[NameOfStaff]["name"], value=f"{request[NameOfStaff]['role']}", inline=False)
+                        embed.add_field(
+                            name="Email", value=f"{request[NameOfStaff]['email']}", inline=False)
+                        embed.add_field(
+                            name="Phone", value=f"{request[NameOfStaff]['phone']}", inline=False)
+                    else:
+                        pass
+            except Exception as e:
+                print(e)
+        else:
+            await ctx.reply("ange personalen")
 
         await ctx.send(embed=embed)
 
